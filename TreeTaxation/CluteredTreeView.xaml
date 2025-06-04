@@ -1,0 +1,22 @@
+﻿<Window x:Class="TreeTaxation.CluteredTreeView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:h="http://helix-toolkit.org/wpf"
+        xmlns:local="clr-namespace:TreeTaxation"
+        mc:Ignorable="d"
+        Title="CluteredTreeView" Height="450" Width="800">
+    <Grid>
+        <h:HelixViewport3D 
+                            ZoomExtentsWhenLoaded="True" 
+                            ShowFrameRate="True" 
+                            ShowCoordinateSystem="True" ShowCameraInfo="True">
+            <h:DefaultLights />
+
+            <h:PointsVisual3D Points="{Binding FindPoints, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Color="Red" Size="2">
+
+            </h:PointsVisual3D>
+        </h:HelixViewport3D>
+    </Grid>
+</Window>
