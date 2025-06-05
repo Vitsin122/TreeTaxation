@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static TreeTaxation.LasReader;
 
 namespace TreeTaxation
 {
@@ -19,9 +20,9 @@ namespace TreeTaxation
     /// </summary>
     public partial class CluteredTreeView : Window
     {
-        public CluteredTreeView()
+        public CluteredTreeView(List<List<RealLasPoint>> treeClusters)
         {
-            DataContext = new ClusteredTreeViewModel();
+            DataContext = new ClusteredTreeViewModel(treeClusters);
 
             InitializeComponent();
         }
