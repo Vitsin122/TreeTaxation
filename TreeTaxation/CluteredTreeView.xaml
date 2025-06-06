@@ -6,17 +6,40 @@
         xmlns:h="http://helix-toolkit.org/wpf"
         xmlns:local="clr-namespace:TreeTaxation"
         mc:Ignorable="d"
-        Title="CluteredTreeView" Height="450" Width="800">
+        Title="Окно кластеризации" Height="450" Width="800">
     <Grid>
-        <h:HelixViewport3D 
-                            ZoomExtentsWhenLoaded="True" 
-                            ShowFrameRate="True" 
-                            ShowCoordinateSystem="True" ShowCameraInfo="True">
-            <h:DefaultLights />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
 
-            <h:PointsVisual3D Points="{Binding FindPoints, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Color="Red" Size="2">
+            <DataGrid AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      ItemsSource="{Binding TreeParamsCollection}"
+                      CanUserDeleteRows="False">
+                
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="№" Binding="{Binding Path=Number}"/>
+                    <DataGridTextColumn Header="Диаметр кроны (м)" Binding="{Binding Path=CrownDiameter}"/>
+                    <DataGridTextColumn Header="Кол-во точек" Binding="{Binding Path=PointsCount}"/>
+                </DataGrid.Columns>
+                
+            </DataGrid>
 
-            </h:PointsVisual3D>
-        </h:HelixViewport3D>
+            <h:HelixViewport3D 
+                    ZoomExtentsWhenLoaded="True"
+                    ShowFrameRate="True" 
+                    ShowCoordinateSystem="True" ShowCameraInfo="True"
+                    Grid.Column="2"
+                    x:Name="viewport">
+                <h:DefaultLights />
+
+                <h:PointsVisual3D Points="{Binding FindPoints, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Color="Red" Size="1">
+
+                </h:PointsVisual3D>
+            </h:HelixViewport3D>
+        </Grid>
     </Grid>
 </Window>

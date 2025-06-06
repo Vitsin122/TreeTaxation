@@ -6,12 +6,12 @@
         xmlns:h="http://helix-toolkit.org/wpf"
         xmlns:local="clr-namespace:TreeTaxation"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1200">
+        Title="TreeTaxation" Height="700" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="10"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="4*"/>
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
@@ -31,7 +31,17 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid>
+            <Grid Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label Content="{Binding FileName}"/>
+                <Button Content="Выбрать файл (.las/.laz)" Grid.Row="2" Command="{Binding FileSelectCommand}"/>
+            </Grid>
+            
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
@@ -42,7 +52,7 @@
                 <TextBox Text="{Binding Eps}" Grid.Column="2"/>
             </Grid>
 
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
@@ -53,7 +63,7 @@
                 <TextBox Text="{Binding MinPts}" Grid.Column="2"/>
             </Grid>
 
-            <Grid Grid.Row="4">
+            <Grid Grid.Row="6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
@@ -64,14 +74,9 @@
                 <TextBox Text="{Binding MaxClstPts }" Grid.Column="2"/>
             </Grid>
 
-            <CheckBox Grid.Row="6" Content="Убрать мелкую растительность" IsChecked="{Binding ClearSmallClusters}"/>
-            
-            <GroupBox Grid.Row="8">
-                <!--<GroupBox.HeaderTemplate>
-                    <DataTemplate>
-                        <CheckBox Content="Убрать мелкую растительность" IsChecked="{Binding ClearSmallClusters, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
-                    </DataTemplate>
-                </GroupBox.HeaderTemplate>-->
+            <CheckBox Grid.Row="8" Content="Убрать мелкую растительность" IsChecked="{Binding ClearSmallClusters}"/>
+
+            <GroupBox Grid.Row="10">
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -103,7 +108,7 @@
                     </Grid>
                 </Grid>
             </GroupBox>
-
+            
             <Button Grid.Row="12" Margin="0 10 0 0" Content="Сегментация" Command="{Binding DBSCANCommand}"/>
         </Grid>
 

@@ -11,7 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using static TreeTaxation.LasReader;
+using LazToLasEasy.Common;
+//using static TreeTaxation.LasReader;
 
 namespace TreeTaxation
 {

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static TreeTaxation.LasReader;
+//using static TreeTaxation.LasReader;
+using LazToLasEasy.Common;
 
 namespace TreeTaxation
 {

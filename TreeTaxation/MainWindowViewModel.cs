@@ -8,8 +8,10 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 using DbscanImplementation;
 using HelixToolkit.Wpf;
-using static TreeTaxation.LasReader;
-//using LazToLasEasy.Common;
+using Microsoft.Win32;
+//using static TreeTaxation.LasReader;
+using LazToLasEasy.Common;
+using LazToLasEasy;
 
 namespace TreeTaxation
 {
@@ -33,30 +35,22 @@ namespace TreeTaxation
                 OnPropertyChanged();
             }
         }
-        private Point3DCollection _findPoints;
-        public Point3DCollection FindPoints
-        {
-            get => _findPoints;
-            set
-            {
-                _findPoints = value;
-                OnPropertyChanged();
-            }
-        }
 
         public string Eps { get; set; }
-        public string MinPts { get; set; }
+        public string MinPts { get; set; } = "10";
         public string MaxClstPts { get; set; }
         public string MinTreePoints { get; set; }
         public bool ClearSmallClusters { get; set; }
         public string MinHeight { get; set; }
+
+        public string FileName { get; set; }
 
         public MainWindowViewModel()
         {
             
             Points = new Point3DCollection();
 
-            var reader = new LasReader("C:\\Users\\Vitsin\\source\\repos\\Las_Converter_Console\\01_ALS.las");
+            var reader = new LazToLasEasy.LasReader("C:\\Users\\Vitsin\\source\\repos\\Las_Converter_Console\\01_ALS.las");
 
             _header = reader.Header;
 
@@ -88,35 +82,6 @@ namespace TreeTaxation
 
                 counter++; 
             }
-
-            /*var a = FindOptimalEps(_treePoints);
-
-            List<List<RealLasPoint>> treeClusters = DBSCAN_KDTree.Cluster(_treePoints, eps: 0.75000000000000025, minPts: 7);
-            List<List<RealLasPoint>> treeClusters = DBSCAN_KDTree_Limited.Cluster(_treePoints, eps: 0.75000000000000025, minPts: 7, maxClusterSize: 2500);
-            var filteredClusters = treeClusters.Where(x => x.Count > 1000).ToList();
-
-            //var filteredCluster = FilterSmallClusters(treeClusters);
-
-            counter = 0;
-
-            foreach (var cluster in filteredClusters)
-            {
-                //if (cluster.Count > 1000)
-                //{
-                //    foreach (var point in cluster)
-                //    {
-                //        FindPoints.Add(new Point3D(point.X / 0.01, point.Y / 0.01, point.Z / 0.01));
-                //    }
-                //}
-
-                foreach (var point in cluster)
-                {
-                    FindPoints.Add(new Point3D(point.X / 0.01, point.Y / 0.01, point.Z / 0.01));
-                }
-
-                counter++;
-            }*/
-
         }
 
         public static double FindOptimalEps(List<RealLasPoint> points, double startEps = 0.5, double endEps = 1.0, double step = 0.02, int minPts = 7)
@@ -142,17 +107,6 @@ namespace TreeTaxation
 
             return bestEps;
         }
-
-        //public static List<List<RealLasPoint>> FilterSmallClusters( List<List<RealLasPoint>> clusters, int minTreePoints = 50, double minHeight = 2.0)
-        //{
-        //    return clusters.Where(c =>
-        //    {
-        //        if (c.Count < minTreePoints) return false;
-
-        //        double height = c.Max(p => p.Z) - c.Min(p => p.Z);
-        //        return height >= minHeight;
-        //    }).ToList();
-        //}
 
         public static List<List<RealLasPoint>> FilterSmallClusters(List<List<RealLasPoint>> clusters, int minTreePoints = 50)
         {
@@ -232,6 +186,21 @@ namespace TreeTaxation
             }
 
             return filteredClusters;
+        }
+
+        private RelayCommand _fileSelectCommand;
+        public RelayCommand FileSelectCommand => _fileSelectCommand ??= new RelayCommand(FileSelectExecute);
+
+        private void FileSelectExecute()
+        {
+            var openDialog = new OpenFileDialog();
+            openDialog.Multiselect = false;
+            openDialog.Filter = "Lidar files(*.las;*.laz)|*.las;*.laz";
+
+            if (openDialog.ShowDialog() ?? false)
+            {
+                MessageBox.Show(openDialog.SafeFileName);
+            }
         }
 
         // Метод для расчета диаметра кроны
