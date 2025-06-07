@@ -6,15 +6,11 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media.Media3D;
-using DbscanImplementation;
 using HelixToolkit.Wpf;
 using Microsoft.Win32;
 using LazToLasEasy.Common;
 using LazToLasEasy;
 using System.Windows.Media;
-using HdbscanSharp.Distance;
-using NetTopologySuite.Algorithm;
-using NetTopologySuite.Geometries;
 
 namespace TreeTaxation
 {

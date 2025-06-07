@@ -15,32 +15,38 @@
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
-            <DataGrid AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      ItemsSource="{Binding TreeParamsCollection}"
-                      CanUserDeleteRows="False">
-                
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="№" Binding="{Binding Path=Number}"/>
-                    <DataGridTextColumn Header="Диаметр кроны (м)" Binding="{Binding Path=CrownDiameter}"/>
-                    <DataGridTextColumn Header="Кол-во точек" Binding="{Binding Path=PointsCount}"/>
-                    <DataGridTextColumn Header="Самая высокая точка (Z)" Binding="{Binding Path=MaxZ}"/>
-                </DataGrid.Columns>
-                
-            </DataGrid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="10*"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
 
-            <h:HelixViewport3D 
-                    ZoomExtentsWhenLoaded="True"
-                    ShowFrameRate="True" 
-                    ShowCoordinateSystem="True" ShowCameraInfo="True"
-                    Grid.Column="2"
-                    x:Name="viewport">
-                <h:DefaultLights />
+                <DataGrid AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          ItemsSource="{Binding TreeParamsCollection}"
+                          CanUserDeleteRows="False">
 
-                <h:PointsVisual3D Points="{Binding FindPoints, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Color="Red" Size="1">
+                    <DataGrid.Columns>
+                        <DataGridCheckBoxColumn Binding="{Binding Path=IsChecked}">
+                            <DataGridCheckBoxColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Button Content="Видимость" Command="{Binding DataContext.CheckFixCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                </DataTemplate>
+                            </DataGridCheckBoxColumn.HeaderTemplate>
+                        </DataGridCheckBoxColumn>
+                        <DataGridTextColumn Header="№" Binding="{Binding Path=Number}"/>
+                        <DataGridTextColumn Header="Диаметр кроны (м)" Binding="{Binding Path=CrownDiameter}"/>
+                        <DataGridTextColumn Header="Кол-во точек" Binding="{Binding Path=PointsCount}"/>
+                        <DataGridTextColumn Header="Самая высокая точка (Z)" Binding="{Binding Path=MaxZ}"/>
+                    </DataGrid.Columns>
 
-                </h:PointsVisual3D>
-            </h:HelixViewport3D>
+                </DataGrid>
+
+                <Button Content="Показать выделенные" Grid.Row="2" Command="{Binding VisibilityCheckClustersCommand}"/>
+            </Grid>
+
+            <ContentControl Content="{Binding Viewport}" Grid.Column="2"/>
         </Grid>
     </Grid>
 </Window>

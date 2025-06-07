@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using LazToLasEasy;
 using LazToLasEasy.Common;
+using System.Windows.Media;
+using Aardvark.Base;
 //using static TreeTaxation.LasReader;
 
 namespace TreeTaxation
@@ -19,43 +21,50 @@ namespace TreeTaxation
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private List<List<RealLasPoint>> _treeClusters;
-
+        private LasHeader? _header;
+        public HelixViewport3D Viewport { get; private set; }
         public ObservableCollection<TreeParams> TreeParamsCollection { get; set; } = new();
+        public Point3DCollection FindPoints { get; set; } = new();
 
-        private Point3DCollection _findPoints;
-        public Point3DCollection FindPoints
+        public ClusteredTreeViewModel(List<List<RealLasPoint>> treeClusters, LasHeader? header = null)
         {
-            get => _findPoints;
-            set
+            _treeClusters = treeClusters;
+            _header = header;
+
+            BuildHelixView(_treeClusters);
+        }
+
+        private RelayCommand _checkFixCommand;
+        public RelayCommand CheckFixCommand => _checkFixCommand ??= new RelayCommand(CheckFix);
+        private void CheckFix()
+        {
+            if (TreeParamsCollection.Any(x => x.IsChecked))
             {
-                _findPoints = value;
-                OnPropertyChanged();
+                TreeParamsCollection.ForEach(x => x.IsChecked = false);
+            }
+            else
+            {
+                TreeParamsCollection.ForEach(x => x.IsChecked = true);
             }
         }
 
-        public ClusteredTreeViewModel(List<List<RealLasPoint>> treeClusters)
+        private RelayCommand _visibilityCheckClustersCommand;
+        public RelayCommand VisibilityCheckClustersCommand => _visibilityCheckClustersCommand ??= new RelayCommand(VisibilityCheckClusters);
+        private void VisibilityCheckClusters()
         {
-            _treeClusters = treeClusters;
+            var checkedCluistersIds = TreeParamsCollection.Where(x => x.IsChecked).Select(x => x.Number).ToList();
 
-            var allPoints = new List<Point3D>();
+            var checkedClusters = new List<List<RealLasPoint>>();
 
-            foreach (var cluster in _treeClusters)
+            for (int i = 0; i < _treeClusters.Count; i++) 
             {
-                allPoints.AddRange(cluster.Select(x => new Point3D(x.X / 0.01, x.Y / 0.01, x.Z / 0.01)));
-            }
-
-            for (int i = 0; i < treeClusters.Count; i++)
-            {
-                TreeParamsCollection.Add(new TreeParams
+                if (checkedCluistersIds.Contains(i))
                 {
-                    Number = i + 1,
-                    CrownDiameter = CalculateCrownDiameter(treeClusters.ElementAt(i)),
-                    PointsCount = treeClusters.ElementAt(i).Count,
-                    MaxZ = treeClusters.ElementAt(i).Select(x => x.Z).Max(),
-                });
+                    checkedClusters.Add(_treeClusters.ElementAt(i));
+                }
             }
 
-            FindPoints = new Point3DCollection(allPoints);
+            BuildHelixView(checkedClusters);
         }
 
         // Расчет диаметра кроны в XY-плоскости
@@ -69,6 +78,59 @@ namespace TreeTaxation
             double maxY = cluster.Max(p => p.Y);
 
             return Math.Max(maxX - minX, maxY - minY);
+        }
+
+        private void BuildHelixView(List<List<RealLasPoint>> clusters)
+        {
+            FindPoints.Clear();
+            Viewport = null;
+
+            var allPoints = new List<Point3D>();
+
+            foreach (var cluster in clusters)
+            {
+                if (_header != null)
+                {
+                    allPoints.AddRange(cluster.Select(x => new Point3D(x.X / _header.XScale, x.Y / _header.YScale, x.Z / _header.ZScale)));
+                }
+                else
+                {
+                    allPoints.AddRange(cluster.Select(x => new Point3D(x.X, x.Y, x.Z)));
+                }
+            }
+
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                TreeParamsCollection.Add(new TreeParams
+                {
+                    IsChecked = true,
+                    Number = i + 1,
+                    CrownDiameter = CalculateCrownDiameter(_treeClusters.ElementAt(i)),
+                    PointsCount = _treeClusters.ElementAt(i).Count,
+                    MaxZ = _treeClusters.ElementAt(i).Select(x => x.Z).Max(),
+                });
+            }
+
+            FindPoints = new Point3DCollection(allPoints);
+
+            Viewport = new HelixViewport3D
+            {
+                ZoomExtentsWhenLoaded = true,
+                ShowFrameRate = true,
+                ShowCoordinateSystem = true,
+                ShowCameraInfo = true
+            };
+
+            Viewport.Children.Add(new DefaultLights());
+
+            var pointsVisual = new PointsVisual3D
+            {
+                Points = new Point3DCollection(FindPoints), // Инициализация
+                Color = Colors.Red,
+                Size = 1
+            };
+
+            Viewport.Children.Add(pointsVisual);
         }
 
         public void OnPropertyChanged([CallerMemberName] string prop = "")
