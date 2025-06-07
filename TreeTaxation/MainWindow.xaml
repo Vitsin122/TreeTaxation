@@ -112,7 +112,7 @@
             <Button Grid.Row="12" Margin="0 10 0 0" Content="Сегментация" Command="{Binding DBSCANCommand}"/>
         </Grid>
 
-        <h:HelixViewport3D Grid.Column="2"
+        <!--<h:HelixViewport3D Grid.Column="2"
             ZoomExtentsWhenLoaded="True" 
             ShowFrameRate="True" 
             ShowCoordinateSystem="True" ShowCameraInfo="True">
@@ -121,6 +121,7 @@
             <h:PointsVisual3D Points="{Binding Points, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Color="Red" Size="1">
 
             </h:PointsVisual3D>
-        </h:HelixViewport3D>
+        </h:HelixViewport3D>-->
+        <ContentControl Content="{Binding Viewport}" Grid.Column="2"/>
     </Grid>
 </Window>

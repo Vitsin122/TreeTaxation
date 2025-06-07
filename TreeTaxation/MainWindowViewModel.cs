@@ -9,9 +9,12 @@ using System.Windows.Media.Media3D;
 using DbscanImplementation;
 using HelixToolkit.Wpf;
 using Microsoft.Win32;
-//using static TreeTaxation.LasReader;
 using LazToLasEasy.Common;
 using LazToLasEasy;
+using System.Windows.Media;
+using HdbscanSharp.Distance;
+using NetTopologySuite.Algorithm;
+using NetTopologySuite.Geometries;
 
 namespace TreeTaxation
 {
@@ -21,11 +24,13 @@ namespace TreeTaxation
 
         private KDTree _tree;
         private LasHeader _header;
-        private List<LasPoint> _allPoints;
-        private List<RealLasPoint> _treePoints = new List<RealLasPoint>();
+        private List<LasPoint> _allPoints = new();
+        private List<RealLasPoint> _treePoints = new();
+
+        public bool ClusteringInProccess { get; set; } = false;
 
         // Коллекция точек для визуализации
-        private Point3DCollection _points;
+        private Point3DCollection _points = new();
         public Point3DCollection Points
         {
             get => _points;
@@ -36,9 +41,11 @@ namespace TreeTaxation
             }
         }
 
-        public string Eps { get; set; }
+        public HelixViewport3D Viewport { get; private set; }
+
+        public string Eps { get; set; } = "1";
         public string MinPts { get; set; } = "10";
-        public string MaxClstPts { get; set; }
+        public string MaxClstPts { get; set; } = "5000";
         public string MinTreePoints { get; set; }
         public bool ClearSmallClusters { get; set; }
         public string MinHeight { get; set; }
@@ -47,41 +54,35 @@ namespace TreeTaxation
 
         public MainWindowViewModel()
         {
-            
-            Points = new Point3DCollection();
 
-            var reader = new LazToLasEasy.LasReader("C:\\Users\\Vitsin\\source\\repos\\Las_Converter_Console\\01_ALS.las");
+            //var reader = new LazToLasEasy.LasReader("C:\\Users\\Vitsin\\source\\repos\\Las_Converter_Console\\01_ALS.las");
 
-            _header = reader.Header;
+            //_header = reader.Header;
 
-            _allPoints = reader.ReadPoints().OrderBy(x => x.X).ThenBy(x => x.Y).ThenBy(x => x.Z).ToList();
+            //_allPoints = reader.ReadPoints().OrderBy(x => x.X).ThenBy(x => x.Y).ThenBy(x => x.Z).ToList();
 
-            int counter = 0;
+            //foreach(var point in _allPoints)
+            //{
 
-            foreach(var point in _allPoints)
-            {
+            //    if ( point.Classification >= 3 && point.Classification <= 5 && (point.ReturnNumber == 1 || point.ReturnNumber == 2))
+            //    {
+            //        var x = point.X;
+            //        var y = point.Y;
+            //        var z = point.Z;
 
-                if ( point.Classification >= 3 && point.Classification <= 5 && (point.ReturnNumber == 1 || point.ReturnNumber == 2))
-                {
-                    var x = point.X;
-                    var y = point.Y;
-                    var z = point.Z;
+            //        _treePoints.Add(new RealLasPoint
+            //        {
+            //            X = point.X * reader.Header.XScale + reader.Header.XOffset,
+            //            Y = point.Y * reader.Header.YScale + reader.Header.YOffset,
+            //            Z = point.Z * reader.Header.ZScale + reader.Header.ZOffset,
+            //            Classification = point.Classification,
+            //            ReturnNumber = point.ReturnNumber,
+            //            Intensity = point.Intensity,
+            //        });
 
-                    _treePoints.Add(new RealLasPoint
-                    {
-                        X = point.X * reader.Header.XScale + reader.Header.XOffset,
-                        Y = point.Y * reader.Header.YScale + reader.Header.YOffset,
-                        Z = point.Z * reader.Header.ZScale + reader.Header.ZOffset,
-                        Classification = point.Classification,
-                        ReturnNumber = point.ReturnNumber,
-                        Intensity = point.Intensity,
-                    });
-
-                    Points.Add(new Point3D(x, y, z));
-                }
-
-                counter++; 
-            }
+            //        Points.Add(new Point3D(x, y, z));
+            //    } 
+            //}
         }
 
         public static double FindOptimalEps(List<RealLasPoint> points, double startEps = 0.5, double endEps = 1.0, double step = 0.02, int minPts = 7)
@@ -112,9 +113,13 @@ namespace TreeTaxation
         {
             return clusters.Where(c =>
             {
-                if (c.Count < minTreePoints) return false;
+                if (c.Count < minTreePoints)
+                {
+                    return false;
+                }
 
                 return true;
+
             }).ToList();
         }
 
@@ -129,12 +134,12 @@ namespace TreeTaxation
             await Task.Run(() =>
             {
                 treeClusters = DBSCAN_KDTree_Limited.Cluster(_treePoints, eps: double.Parse(Eps), minPts: int.Parse(MinPts), maxClusterSize:int.Parse(MaxClstPts));
-
-                if (ClearSmallClusters)
-                {
-                    treeClusters = FilterVegetation(treeClusters, _allPoints, _header, double.Parse(MinHeight), int.Parse(MinTreePoints));
-                }
             });
+
+            if (ClearSmallClusters)
+            {
+                treeClusters = FilterVegetation(treeClusters, _allPoints, _header, int.Parse(MinHeight), int.Parse(MinTreePoints));
+            }
 
             var cluteredView = new CluteredTreeView(treeClusters);
 
@@ -199,8 +204,127 @@ namespace TreeTaxation
 
             if (openDialog.ShowDialog() ?? false)
             {
-                MessageBox.Show(openDialog.SafeFileName);
+                Points.Clear();
+                _allPoints.Clear();
+                _treePoints.Clear();
+
+                int counter = 0;
+
+                if (openDialog.FileName.TakeLast(1).First() == 's')
+                {
+                    var reader = new LazToLasEasy.LasReader(openDialog.FileName);
+
+                    _header = reader.Header;
+
+                    _allPoints = reader.ReadPoints().OrderBy(x => x.X).ThenBy(x => x.Y).ThenBy(x => x.Z).ToList();
+
+                    if (!_allPoints.Any(x => x.Classification == 4 || x.Classification == 5))
+                    {
+                        MessageBox.Show("Не существует точек с классификацией \"Средняя\" и \"Высокая\" растительность", "Ошибка", MessageBoxButton.OK);
+
+                        Points.Clear();
+                        _allPoints.Clear();
+                        _treePoints.Clear();
+
+                        return;
+                    }
+
+                    var vegetationPoints = new List<Point3D>();
+
+                    foreach (var point in _allPoints)
+                    {
+                        if (point.Classification == 4 || point.Classification == 5)
+                        {
+                            var x = point.X;
+                            var y = point.Y;
+                            var z = point.Z;
+
+                            _treePoints.Add(new RealLasPoint
+                            {
+                                X = point.X * reader.Header.XScale + reader.Header.XOffset,
+                                Y = point.Y * reader.Header.YScale + reader.Header.YOffset,
+                                Z = point.Z * reader.Header.ZScale + reader.Header.ZOffset,
+                                Classification = point.Classification,
+                                ReturnNumber = point.ReturnNumber,
+                                Intensity = point.Intensity,
+                            });
+
+                            vegetationPoints.Add(new Point3D(x, y, z));
+                        }
+                    }
+
+                    Points = new Point3DCollection(vegetationPoints);
+                }
+                else if(openDialog.FileName.TakeLast(1).First() == 'z')
+                {
+                    var points = LazToLasEasy.LazConverter.Convert(openDialog.FileName);
+
+                    var vegetationPoints = new List<Point3D>();
+
+                    if (!points.Any(x => x.Classification == 4 || x.Classification == 5))
+                    {
+                        MessageBox.Show("Ошибка", "Не существует точек с классификацией \"Средняя\" и \"Высокая\" растительность", MessageBoxButton.OK);
+
+                        Points.Clear();
+                        _allPoints.Clear();
+                        _treePoints.Clear();
+
+                        return;
+                    }
+
+                    foreach (var point in points)
+                    {
+                        if (points.Count() > 3000000 && counter % (int)(points.Count()/500000) == 0)
+                        {
+                            var x = point.X;
+                            var y = point.Y;
+                            var z = point.Z;
+
+                            _treePoints.Add(new RealLasPoint
+                            {
+                                X = point.X,
+                                Y = point.Y,
+                                Z = point.Z,
+                                Classification = point.Classification,
+                                ReturnNumber = point.ReturnNumber,
+                                Intensity = point.Intensity,
+                            });
+
+                            vegetationPoints.Add(new Point3D(x, y, z));
+                        }
+
+                        counter++;
+                    }
+
+                    Points = new Point3DCollection(vegetationPoints);
+                }
+
+                BuildHelixView();
             }
+
+
+        }
+
+        private void BuildHelixView()
+        {
+            Viewport = new HelixViewport3D
+            {
+                ZoomExtentsWhenLoaded = true,
+                ShowFrameRate = true,
+                ShowCoordinateSystem = true,
+                ShowCameraInfo = true
+            };
+
+            Viewport.Children.Add(new DefaultLights());
+
+            var pointsVisual = new PointsVisual3D
+            {
+                Points = new Point3DCollection(Points), // Инициализация
+                Color = Colors.Green,
+                Size = 1
+            };
+
+            Viewport.Children.Add(pointsVisual);
         }
 
         // Метод для расчета диаметра кроны

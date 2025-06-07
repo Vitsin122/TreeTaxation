@@ -11,5 +11,6 @@ namespace TreeTaxation
         public int Number {  get; set; }
         public int PointsCount {  get; set; }
         public double CrownDiameter { get; set; }
+        public double MaxZ { get; set; }
     }
 }

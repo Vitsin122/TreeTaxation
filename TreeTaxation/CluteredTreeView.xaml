@@ -24,6 +24,7 @@
                     <DataGridTextColumn Header="№" Binding="{Binding Path=Number}"/>
                     <DataGridTextColumn Header="Диаметр кроны (м)" Binding="{Binding Path=CrownDiameter}"/>
                     <DataGridTextColumn Header="Кол-во точек" Binding="{Binding Path=PointsCount}"/>
+                    <DataGridTextColumn Header="Самая высокая точка (Z)" Binding="{Binding Path=MaxZ}"/>
                 </DataGrid.Columns>
                 
             </DataGrid>

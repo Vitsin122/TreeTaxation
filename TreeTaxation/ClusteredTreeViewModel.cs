@@ -18,8 +18,6 @@ namespace TreeTaxation
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public HelixViewport3D viewport { get; set; }
-
         private List<List<RealLasPoint>> _treeClusters;
 
         public ObservableCollection<TreeParams> TreeParamsCollection { get; set; } = new();
@@ -52,7 +50,8 @@ namespace TreeTaxation
                 {
                     Number = i + 1,
                     CrownDiameter = CalculateCrownDiameter(treeClusters.ElementAt(i)),
-                    PointsCount = treeClusters.ElementAt(i).Count
+                    PointsCount = treeClusters.ElementAt(i).Count,
+                    MaxZ = treeClusters.ElementAt(i).Select(x => x.Z).Max(),
                 });
             }
 
