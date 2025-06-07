@@ -270,7 +270,7 @@ namespace TreeTaxation
 
                     foreach (var point in points)
                     {
-                        if (points.Count() > 3000000 && counter % (int)(points.Count()/500000) == 0)
+                        if (points.Count() > 3000000 && counter % (int)(points.Count()/520000) == 0)
                         {
                             var x = point.X;
                             var y = point.Y;

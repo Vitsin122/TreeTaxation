@@ -12,6 +12,7 @@ using LazToLasEasy;
 using LazToLasEasy.Common;
 using System.Windows.Media;
 using Aardvark.Base;
+using HdbscanSharp.Hdbscanstar;
 //using static TreeTaxation.LasReader;
 
 namespace TreeTaxation
@@ -30,6 +31,18 @@ namespace TreeTaxation
         {
             _treeClusters = treeClusters;
             _header = header;
+
+            for (int i = 0; i < _treeClusters.Count; i++)
+            {
+                TreeParamsCollection.Add(new TreeParams
+                {
+                    IsChecked = true,
+                    Number = i + 1,
+                    CrownDiameter = CalculateCrownDiameter(_treeClusters.ElementAt(i)),
+                    PointsCount = _treeClusters.ElementAt(i).Count,
+                    MaxZ = _treeClusters.ElementAt(i).Select(x => x.Z).Max(),
+                });
+            }
 
             BuildHelixView(_treeClusters);
         }
@@ -97,18 +110,6 @@ namespace TreeTaxation
                 {
                     allPoints.AddRange(cluster.Select(x => new Point3D(x.X, x.Y, x.Z)));
                 }
-            }
-
-            for (int i = 0; i < clusters.Count; i++)
-            {
-                TreeParamsCollection.Add(new TreeParams
-                {
-                    IsChecked = true,
-                    Number = i + 1,
-                    CrownDiameter = CalculateCrownDiameter(_treeClusters.ElementAt(i)),
-                    PointsCount = _treeClusters.ElementAt(i).Count,
-                    MaxZ = _treeClusters.ElementAt(i).Select(x => x.Z).Max(),
-                });
             }
 
             FindPoints = new Point3DCollection(allPoints);
